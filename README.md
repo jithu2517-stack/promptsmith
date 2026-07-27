@@ -2,7 +2,7 @@
 
 **A prompt engineering toolkit — version control, A/B testing, caching, and evaluation for AI prompts.**
 
-[![CI](https://github.com/user/promptsmith/actions/workflows/ci.yml/badge.svg)](https://github.com/user/promptsmith/actions/workflows/ci.yml)
+[![CI](https://github.com/jithu2517-stack/promptsmith/actions/workflows/ci.yml/badge.svg)](https://github.com/jithu2517-stack/promptsmith/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -166,7 +166,7 @@ max_tokens: 200
 ## Development
 
 ```bash
-git clone https://github.com/user/promptsmith.git
+git clone https://github.com/jithu2517-stack/promptsmith.git
 cd promptsmith
 pip install -e ".[dev]"
 pytest
