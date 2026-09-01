@@ -189,11 +189,10 @@ class TestRunner:
         assert results[0].passed is True
 
     def test_cache_usage(self, setup):
-        import tempfile
         from promptsmith.core.cache import Cache
 
-        with tempfile.NamedTemporaryFile(suffix=".db") as tf:
-            cache = Cache(tf.name)
+        with tempfile.TemporaryDirectory() as tmp:
+            cache = Cache(f"{tmp}/cache.db")
             runner = Runner(setup, cache=cache)
             prompt = setup.get_prompt("greeting")
 

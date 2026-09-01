@@ -17,11 +17,15 @@ PromptSmith is a CLI tool and Python library that brings software engineering be
 ## Installation
 
 ```bash
-pip install promptsmith
+# The distribution is promptsmith-ai; Python imports and the CLI stay promptsmith.
+pip install promptsmith-ai
 
 # With provider support:
-pip install "promptsmith[openai,anthropic]"
+pip install "promptsmith-ai[openai,anthropic]"
 ```
+
+`promptsmith` on PyPI belongs to an unrelated project. Install `promptsmith-ai`
+to get this repository.
 
 ## Quick Start
 
@@ -153,15 +157,12 @@ min_tokens: 5
 max_tokens: 200
 ```
 
-## Provider Pricing (per 1M tokens)
+## Costs and benchmarks
 
-| Provider | Model | Input | Output |
-|----------|-------|-------|--------|
-| OpenAI | gpt-4o | $2.50 | $10.00 |
-| OpenAI | gpt-4o-mini | $0.15 | $0.60 |
-| OpenAI | gpt-4-turbo | $10.00 | $30.00 |
-| Anthropic | Claude 3.5 Sonnet | $3.00 | $15.00 |
-| Anthropic | Claude 3 Haiku | $0.25 | $1.25 |
+PromptSmith reports estimated cost only for models with pricing configured in its
+provider adapters. Pricing changes frequently, so treat estimates as planning aids,
+not invoices. Benchmarks run requests against the providers you configure; this
+repository does not publish comparative performance claims or precomputed results.
 
 ## Development
 
@@ -173,6 +174,9 @@ pytest
 ruff check .
 mypy src/
 ```
+
+See [the contribution guide](CONTRIBUTING.md), [security policy](SECURITY.md),
+and [example vault](examples/basic-vault/README.md).
 
 ## License
 

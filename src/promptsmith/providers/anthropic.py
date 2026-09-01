@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import time
+from typing import Any
 
 from promptsmith.models.types import Message, Provider, RunResult
 from promptsmith.providers.base import BaseProvider
@@ -27,14 +28,15 @@ class AnthropicProvider(BaseProvider):
     def provider(self) -> Provider:
         return Provider.ANTHROPIC
 
-    def _get_client(self) -> object:
+    def _get_client(self) -> Any:
         if self._client is None:
             try:
                 from anthropic import AsyncAnthropic
-            except ImportError:
+            except ImportError as exc:
                 raise ImportError(
-                    "anthropic package required. Install with: pip install promptsmith[anthropic]"
-                )
+                    "anthropic package required. Install with: "
+                    "pip install promptsmith-ai[anthropic]"
+                ) from exc
             key = self.api_key or os.environ.get("ANTHROPIC_API_KEY", "")
             self._client = AsyncAnthropic(api_key=key)
         return self._client

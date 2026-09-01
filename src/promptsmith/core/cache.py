@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import hashlib
-import json
-import os
 import sqlite3
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
 
-from promptsmith.models.types import RunResult
-
+from promptsmith.models.types import Provider, RunResult
 
 CACHE_DB_FILENAME = "cache.db"
 
@@ -24,7 +24,7 @@ class Cache:
         self._init_db()
 
     def _init_db(self) -> None:
-        with sqlite3.connect(str(self.db_path)) as conn:
+        with self._connection() as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS cache (
                     cache_key TEXT PRIMARY KEY,
@@ -51,6 +51,19 @@ class Cache:
             """)
             conn.commit()
 
+    @contextmanager
+    def _connection(self) -> Iterator[sqlite3.Connection]:
+        """Yield a SQLite connection and close it deterministically.
+
+        Closing explicitly matters on Windows, where a lingering connection can
+        keep the cache database locked after a command or test finishes.
+        """
+        conn = sqlite3.connect(str(self.db_path))
+        try:
+            yield conn
+        finally:
+            conn.close()
+
     @staticmethod
     def _compute_cache_key(
         messages_json: str, provider: str, model: str
@@ -62,7 +75,7 @@ class Cache:
         self, prompt_hash: str, provider: str, model: str, messages_json: str
     ) -> RunResult | None:
         cache_key = self._compute_cache_key(messages_json, provider, model)
-        with sqlite3.connect(str(self.db_path)) as conn:
+        with self._connection() as conn:
             row = conn.execute(
                 "SELECT * FROM cache WHERE cache_key = ? AND prompt_hash = ?",
                 (cache_key, prompt_hash),
@@ -70,7 +83,8 @@ class Cache:
 
             if row:
                 conn.execute(
-                    "UPDATE cache SET access_count = access_count + 1, last_accessed = ? WHERE cache_key = ?",
+                    "UPDATE cache SET access_count = access_count + 1, "
+                    "last_accessed = ? WHERE cache_key = ?",
                     (time.time(), cache_key),
                 )
                 conn.commit()
@@ -82,7 +96,7 @@ class Cache:
         cache_key = self._compute_cache_key(
             messages_json, result.provider.value, result.model
         )
-        with sqlite3.connect(str(self.db_path)) as conn:
+        with self._connection() as conn:
             conn.execute(
                 """INSERT OR REPLACE INTO cache
                    (cache_key, prompt_hash, provider, model, response_text,
@@ -106,7 +120,7 @@ class Cache:
             conn.commit()
 
     def invalidate(self, prompt_hash: str | None = None) -> int:
-        with sqlite3.connect(str(self.db_path)) as conn:
+        with self._connection() as conn:
             if prompt_hash:
                 cursor = conn.execute(
                     "DELETE FROM cache WHERE prompt_hash = ?", (prompt_hash,)
@@ -117,7 +131,7 @@ class Cache:
             return cursor.rowcount
 
     def stats(self) -> dict[str, object]:
-        with sqlite3.connect(str(self.db_path)) as conn:
+        with self._connection() as conn:
             total = conn.execute("SELECT COUNT(*) FROM cache").fetchone()[0]
             total_saved = conn.execute(
                 "SELECT COALESCE(SUM(cost_usd), 0) FROM cache"
@@ -135,12 +149,12 @@ class Cache:
                 "db_path": str(self.db_path),
             }
 
-    def _row_to_result(self, row: tuple) -> RunResult:
+    def _row_to_result(self, row: tuple[Any, ...]) -> RunResult:
         return RunResult(
             prompt_name="",
             prompt_version=0,
             prompt_hash=row[1],
-            provider=row[2],
+            provider=Provider(row[2]),
             model=row[3],
             messages_sent=[],
             response_text=row[4],
@@ -154,7 +168,7 @@ class Cache:
 
     def prune(self, max_age_days: int = 30) -> int:
         cutoff = time.time() - (max_age_days * 86400)
-        with sqlite3.connect(str(self.db_path)) as conn:
+        with self._connection() as conn:
             cursor = conn.execute(
                 "DELETE FROM cache WHERE last_accessed < ?", (cutoff,)
             )

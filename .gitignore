@@ -17,6 +17,7 @@ htmlcov/
 .env.*
 venv/
 .venv/
+.verify-venv/
 *.db
 *.sqlite3
 .promptsmith/

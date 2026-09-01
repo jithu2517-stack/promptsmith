@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import os
 import time
 
 from promptsmith.models.types import Message, Provider, RunResult

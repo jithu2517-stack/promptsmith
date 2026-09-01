@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import time
+from typing import Any
 
 from promptsmith.models.types import Message, Provider, RunResult
 from promptsmith.providers.base import BaseProvider
@@ -26,14 +27,14 @@ class OpenAIProvider(BaseProvider):
     def provider(self) -> Provider:
         return Provider.OPENAI
 
-    def _get_client(self) -> object:
+    def _get_client(self) -> Any:
         if self._client is None:
             try:
                 from openai import AsyncOpenAI
-            except ImportError:
+            except ImportError as exc:
                 raise ImportError(
-                    "openai package required. Install with: pip install promptsmith[openai]"
-                )
+                    "openai package required. Install with: pip install promptsmith-ai[openai]"
+                ) from exc
             key = self.api_key or os.environ.get("OPENAI_API_KEY", "")
             self._client = AsyncOpenAI(api_key=key)
         return self._client

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import tempfile
+from pathlib import Path
 
 import pytest
 
@@ -10,9 +11,9 @@ from promptsmith.models.types import Message, Provider, Role, RunResult
 
 
 @pytest.fixture
-def cache():
-    with tempfile.NamedTemporaryFile(suffix=".db") as tf:
-        c = Cache(tf.name)
+def cache() -> Cache:
+    with tempfile.TemporaryDirectory() as tmp:
+        c = Cache(Path(tmp) / "cache.db")
         yield c
 
 

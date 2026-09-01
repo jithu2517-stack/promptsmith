@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from promptsmith.models.types import TestCase, TestResult, RunResult
+from promptsmith.models.types import RunResult, TestCase, TestResult
 
 
 def evaluate_test_case(
@@ -53,13 +53,18 @@ def evaluate_test_case(
 
     if test_case.min_tokens > 0:
         enough = run_result.tokens_output >= test_case.min_tokens
+        min_message = (
+            f"{run_result.tokens_output} >= {test_case.min_tokens}"
+            if enough
+            else f"{run_result.tokens_output} < {test_case.min_tokens}"
+        )
         checks.append(
             {
                 "check": "min_tokens",
                 "expected": test_case.min_tokens,
                 "actual": run_result.tokens_output,
                 "passed": enough,
-                "message": f"{run_result.tokens_output} >= {test_case.min_tokens}" if enough else f"{run_result.tokens_output} < {test_case.min_tokens}",
+                "message": min_message,
             }
         )
         if not enough:
@@ -67,13 +72,18 @@ def evaluate_test_case(
 
     if test_case.max_tokens > 0:
         within = run_result.tokens_output <= test_case.max_tokens
+        max_message = (
+            f"{run_result.tokens_output} <= {test_case.max_tokens}"
+            if within
+            else f"{run_result.tokens_output} > {test_case.max_tokens}"
+        )
         checks.append(
             {
                 "check": "max_tokens",
                 "expected": test_case.max_tokens,
                 "actual": run_result.tokens_output,
                 "passed": within,
-                "message": f"{run_result.tokens_output} <= {test_case.max_tokens}" if within else f"{run_result.tokens_output} > {test_case.max_tokens}",
+                "message": max_message,
             }
         )
         if not within:

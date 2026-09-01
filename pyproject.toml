@@ -3,25 +3,24 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "promptsmith"
+name = "promptsmith-ai"
 version = "0.1.0"
 description = "A prompt engineering toolkit — version control, A/B testing, caching, and evaluation for AI prompts"
 readme = "README.md"
-license = {text = "MIT"}
-authors = [
-    {name = "PromptSmith Contributors"},
-]
+license = "MIT"
+authors = [{name = "jithu2517-stack"}]
+maintainers = [{name = "jithu2517-stack"}]
 keywords = ["ai", "llm", "prompt-engineering", "claude", "gpt", "testing", "version-control"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Testing",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
 ]
 requires-python = ">=3.10"
 dependencies = [
@@ -51,6 +50,12 @@ anthropic = ["anthropic>=0.25"]
 [project.scripts]
 promptsmith = "promptsmith.cli:main"
 ps = "promptsmith.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/jithu2517-stack/promptsmith"
+Repository = "https://github.com/jithu2517-stack/promptsmith"
+Issues = "https://github.com/jithu2517-stack/promptsmith/issues"
+Changelog = "https://github.com/jithu2517-stack/promptsmith/blob/master/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]

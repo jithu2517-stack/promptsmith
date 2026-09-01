@@ -121,6 +121,8 @@ class RunResult:
 
 @dataclass
 class TestCase:
+    __test__ = False
+
     name: str
     description: str = ""
     input_variables: dict[str, str] = field(default_factory=dict)

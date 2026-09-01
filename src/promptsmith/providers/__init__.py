@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import os
-
 from promptsmith.models.types import Provider
 from promptsmith.providers.anthropic import AnthropicProvider
 from promptsmith.providers.base import BaseProvider

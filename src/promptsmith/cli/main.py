@@ -6,16 +6,14 @@ import sys
 from typing import Any
 
 import click
+from rich import box
 from rich.console import Console
 from rich.panel import Panel
-from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
-from rich import box
 
 from promptsmith.core import Cache, Runner, Vault, VaultError
 from promptsmith.models.types import Message, Prompt, Provider, Role, TestCase
-
 
 console = Console()
 pass_vault = click.make_pass_decorator(Vault)
@@ -97,11 +95,10 @@ def create(
     if user_prompt:
         messages.append(Message(role=Role.USER, content=user_prompt))
 
-    if not messages:
-        if not sys.stdin.isatty():
-            content = sys.stdin.read().strip()
-            if content:
-                messages.append(Message(role=Role.USER, content=content))
+    if not messages and not sys.stdin.isatty():
+        content = sys.stdin.read().strip()
+        if content:
+            messages.append(Message(role=Role.USER, content=content))
 
     prompt = Prompt(
         name=name,
@@ -132,7 +129,10 @@ def show(ctx: click.Context, name: str | None, ver: int | None) -> None:
     if name is None:
         prompts = vault.list_prompts()
         if not prompts:
-            console.print("[dim]No prompts in vault. Create one with [bold]promptsmith create[/bold][/dim]")
+            console.print(
+                "[dim]No prompts in vault. Create one with "
+                "[bold]promptsmith create[/bold][/dim]"
+            )
             return
 
         table = Table(title="PromptSmith Vault", box=box.ROUNDED)
@@ -174,7 +174,7 @@ def show(ctx: click.Context, name: str | None, ver: int | None) -> None:
 
     console.print(Panel(info, title=f"Prompt: {prompt.name}", border_style="cyan"))
 
-    for i, msg in enumerate(prompt.messages):
+    for msg in prompt.messages:
         role_color = {"system": "red", "user": "green", "assistant": "blue"}.get(
             msg.role.value, "white"
         )
@@ -326,7 +326,11 @@ def run(
     result = asyncio.run(
         runner.run_prompt(
             prompt,
-            provider=Provider(provider) if provider in ("openai", "anthropic", "mock") else provider,
+            provider=(
+                Provider(provider)
+                if provider in ("openai", "anthropic", "mock")
+                else provider
+            ),
             model=model,
             no_cache=no_cache,
             variables=vars_dict if vars_dict else None,
@@ -401,7 +405,10 @@ def test(
         return
 
     if not results:
-        console.print("[dim]No tests defined. Create tests with [bold]promptsmith test-add[/bold][/dim]")
+        console.print(
+            "[dim]No tests defined. Create tests with "
+            "[bold]promptsmith test-add[/bold][/dim]"
+        )
         return
 
     passed = sum(1 for r in results if r.passed)
@@ -438,7 +445,9 @@ def test(
 @click.option("--description", "-d", default="", help="Test description")
 @click.option("--var", "-v", "variables", multiple=True, help="Template variables (key=value)")
 @click.option("--expect", "-e", "expected", multiple=True, help="Regex patterns that must match")
-@click.option("--forbid", "-f", "forbidden", multiple=True, help="Regex patterns that must not match")
+@click.option(
+    "--forbid", "-f", "forbidden", multiple=True, help="Regex patterns that must not match"
+)
 @click.option("--min-tokens", type=int, default=0, help="Minimum output tokens")
 @click.option("--max-tokens", type=int, default=0, help="Maximum output tokens")
 @click.pass_context
@@ -496,7 +505,9 @@ def test_list(ctx: click.Context) -> None:
 
 @main.command()
 @click.argument("name")
-@click.option("--versions", "-v", "vers", type=(int, int), help="Compare two versions (e.g., -v 1 3)")
+@click.option(
+    "--versions", "-v", "vers", type=(int, int), help="Compare two versions (e.g., -v 1 3)"
+)
 @click.option("--other", "-o", "other_name", help="Compare with another prompt")
 @click.pass_context
 def diff(
@@ -545,7 +556,7 @@ def diff(
 
         console.print(f"[bold]Comparing:[/bold] {name} vs {other_name}\n")
         for i, (m1, m2) in enumerate(
-            zip(p1.messages, p2.messages)
+            zip(p1.messages, p2.messages, strict=False)
         ):
             if m1.content != m2.content:
                 console.print(f"[yellow]Message {i} differs:[/yellow]")
@@ -580,10 +591,8 @@ def benchmark(
     if not model:
         model = ("mock",)
 
-    providers_list = [
-        (Provider(p) if p in ("openai", "anthropic", "mock") else p, m)
-        for p in provider
-        for m in model
+    providers_list: list[tuple[Provider, str]] = [
+        (Provider(p), m) for p in provider for m in model
     ]
 
     runner = Runner(vault)

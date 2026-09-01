@@ -1,16 +1,14 @@
 from __future__ import annotations
 
 import json
-import os
 import shutil
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import yaml
 
-from promptsmith.models.types import Message, Prompt
-
+from promptsmith.models.types import Prompt, TestCase
 
 VAULT_DIR = ".promptsmith"
 PROMPTS_DIR = "prompts"
@@ -65,7 +63,8 @@ class Vault:
         if not self.config_path.exists():
             return {}
         with open(self.config_path) as f:
-            return yaml.safe_load(f) or {}
+            config = yaml.safe_load(f)
+        return config if isinstance(config, dict) else {}
 
     def set_config(self, key: str, value: Any) -> None:
         config = self.get_config()
@@ -77,7 +76,10 @@ class Vault:
         if not self.index_path.exists():
             return {}
         with open(self.index_path) as f:
-            return json.load(f)
+            index = json.load(f)
+        if not isinstance(index, dict):
+            raise VaultError(f"Invalid vault index: {self.index_path}")
+        return cast(dict[str, Any], index)
 
     def _save_index(self, index: dict[str, Any]) -> None:
         with open(self.index_path, "w") as f:
@@ -133,6 +135,8 @@ class Vault:
                     raise VaultError(f"Prompt file missing: {file_path}")
                 with open(file_path) as f:
                     data = yaml.safe_load(f)
+                if not isinstance(data, dict):
+                    raise VaultError(f"Invalid prompt file: {file_path}")
                 return Prompt.from_dict(data)
 
         return None
@@ -159,7 +163,7 @@ class Vault:
         index = self._load_index()
         if name not in index:
             raise VaultError(f"Prompt '{name}' not found.")
-        return index[name]["versions"]
+        return cast(list[dict[str, Any]], index[name]["versions"])
 
     def diff_prompts(self, name: str, v1: int, v2: int) -> dict[str, Any]:
         p1 = self.get_prompt(name, v1)
@@ -173,6 +177,7 @@ class Vault:
             m1 = p1.messages[i] if i < len(p1.messages) else None
             m2 = p2.messages[i] if i < len(p2.messages) else None
             if m1 is None:
+                assert m2 is not None
                 diffs.append({"type": "added", "index": i, "content": m2.content})
             elif m2 is None:
                 diffs.append({"type": "removed", "index": i, "content": m1.content})
@@ -223,21 +228,20 @@ class Vault:
         prompt.version = 1
         return self.save_prompt(prompt, increment_version=False)
 
-    def save_test(self, test) -> None:
-        from promptsmith.models.types import TestCase
-        test: TestCase
+    def save_test(self, test: TestCase) -> None:
         self.tests_path.mkdir(parents=True, exist_ok=True)
         file_path = self.tests_path / f"{test.name}.yaml"
         with open(file_path, "w") as f:
             yaml.dump(test.to_dict(), f, default_flow_style=False)
 
-    def get_test(self, name: str):
-        from promptsmith.models.types import TestCase
+    def get_test(self, name: str) -> TestCase | None:
         file_path = self.tests_path / f"{name}.yaml"
         if not file_path.exists():
             return None
         with open(file_path) as f:
             data = yaml.safe_load(f)
+        if not isinstance(data, dict):
+            raise VaultError(f"Invalid test file: {file_path}")
         return TestCase.from_dict(data)
 
     def list_tests(self) -> list[str]:

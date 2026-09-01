@@ -1,11 +1,6 @@
 from __future__ import annotations
 
-import asyncio
-import os
-
-import pytest
-
-from promptsmith.models.types import Message, Provider, Role
+from promptsmith.models.types import Provider
 from promptsmith.providers import get_provider
 from promptsmith.providers.anthropic import AnthropicProvider
 from promptsmith.providers.openai import OpenAIProvider

@@ -13,13 +13,10 @@ from promptsmith.models.types import (
     Message,
     Prompt,
     Provider,
-    Role,
     RunResult,
-    TestCase,
     TestResult,
 )
 from promptsmith.providers import get_provider
-from promptsmith.providers.base import BaseProvider
 
 
 class Runner:
@@ -151,7 +148,7 @@ class Runner:
             )
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        output = []
+        output: list[TestResult] = []
         for r in results:
             if isinstance(r, Exception):
                 output.append(
@@ -162,7 +159,7 @@ class Runner:
                         error=str(r),
                     )
                 )
-            else:
+            elif isinstance(r, TestResult):
                 output.append(r)
         return output
 
@@ -203,7 +200,7 @@ class Runner:
         if not prompt:
             raise ValueError(f"Prompt '{prompt_name}' not found in vault.")
 
-        all_results = []
+        all_results: list[RunResult] = []
         for _ in range(runs):
             tasks = []
             for prov, model in providers:
